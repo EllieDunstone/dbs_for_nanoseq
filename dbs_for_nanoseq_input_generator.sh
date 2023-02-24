@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-# Input a canapps project number to get the zipped sbs vcfs for nanoseq data, unzip, delete tbi files, and filter for PASS only
-# Usage: dbs_for_nanoseq_input_generator.sh  - run from data dir 
+# Run from within data directory to get zipped sbs vcfs for nanoseq data, unzip, delete tbi files, and filter for PASS only
+# Usage: dbs_for_nanoseq_input_generator.sh  - run from data dir created using nanoflow workflow
 
 #If error, stop script
 set -e
@@ -10,9 +10,8 @@ set -e
 mkdir dinucs
 cd dinucs
 
-# Copy indel vcfs from irods
+# Copy sbs vcfs to new dir
 echo "Copying SBS mutation files"
-#cp "/nfs/irods-cgp-*/intproj/${project_number}/sample/PD*/*muts.vcf*" ./
 cp ../summary_PD*/*muts.tsv ./
 echo "SBS mutation files copied!"
 

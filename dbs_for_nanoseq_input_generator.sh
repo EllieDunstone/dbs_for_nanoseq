@@ -15,6 +15,9 @@ echo "Copying SBS mutation files"
 cp ../summary_PD*/*muts.tsv ./
 echo "SBS mutation files copied!"
 
+# Load farm version of bcftools
+module load bcftools
+
 # Filter vcfs to leave PASS variants only, and create new files with filtered only
 for file in *.vcf;
 do

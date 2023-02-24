@@ -1,6 +1,6 @@
 # DBS for nanoseq
 
-NB// WIP - no promises anything here works right now
+NB// WIP - no promises anything here works right now.
 
 ## Introduction
 

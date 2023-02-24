@@ -5,7 +5,7 @@
 # sampleID, chr = chromosome, pos = mutated site, ref = reference base, mut = mutant base.
 
 
-# NB. For users at the Wellcome Sanger Institute, the wrapper script (dinuc_nanoseq_caller_wrapper.sh) can be used to pull mutation files from the compute farm, filter them, and format them correctly to be used in this script.
+# NB. For users at the Wellcome Sanger Institute, the script (dbs_for_nanoseq_input_generator.sh) can be used to pull mutation files from the compute farm, filter them, and format them correctly to be used in this script.
 
 library(tidyverse)
 library(vcfR)

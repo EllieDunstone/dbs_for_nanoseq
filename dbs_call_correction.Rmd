@@ -1,0 +1,28 @@
+---
+title: "DBS call correction"
+author: "Ellie Dunstone"
+date: "2023-02-25"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r load packages, include=FALSE}
+library(tidyverse)
+library(deconstructsigs)
+```
+
+## Introduction
+
+This script uses the trinucleotide frequencies present in your NanoSeq data (output by the NanoSeq pipeline) to calculate the dinucleotide frequencies present, and then use these values to correct your matrix of observed DBS counts (see "dnv_caller.Rmd") according to the dinucleotide frequency in your data. This effectively maps your observed calls onto the frequency that would be expected in a normal diploid human genome.
+
+Notes:
+per sample file with the trinuc frequency in sample, and in genome
+for each trinuc, keep only first two bases - sum over the entries for the third base
+gives count for the trinucs - this is the observed
+calculate freq for both
+correct by normalising according to it
+am looking for the trinuc ratio2genome file
+can get actual counts in genome using deconstructsigs::trinuc_counts or soemthing? 

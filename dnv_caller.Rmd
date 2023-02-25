@@ -26,10 +26,10 @@ You can generate the table of DNVs using the script "dbs_calling_annotating_runs
 Read in your table of DNVs.
 
 ```{r read DNV table}
-dataset <- read.table(file = "/Users/ed4/Documents/phd/chemo_project/BotSeq/WP4/KCL_organoid_work/wp4_2530_20230127/data/dbs_calls.csv", sep = ",", stringsAsFactors = F, header = T)
+dataset <- read.table(file = "/Users/ed4/Documents/phd/chemo_project/BotSeq/panbody/panbody_20230106/data/dbs_calling/dbs_calls.csv", sep = ",", stringsAsFactors = F, header = T)
 ```
 
-Filter for DBS only.
+Filter for DBS only (should already be the case if generated using "dbs_calling_annotating_runs_subs.R").
 
 ```{r format table}
 #check/filter for DBS only
@@ -158,7 +158,7 @@ for(k in 1:length(samples)) {
   dnv_grob_plot <- gtable_add_grob(dnv_grob_plot, textGrob(label = "TG>NN", x = (60.2 / 78 + 60.2 / 78 + 8.8 / 78) / 2, y = 0.6, hjust = 0.5, vjust = 0),t = 1, l = panel_id$l, name = "tg_text")
   dnv_grob_plot <- gtable_add_grob(dnv_grob_plot, textGrob(label = "TT>NN", x = (69.2 / 78 + 69.2 / 78 + 8.8 / 78) / 2, y = 0.6, hjust = 0.5, vjust = 0),t = 1, l = panel_id$l, name = "tt_text")
   
-  ggsave(filename = paste("/Users/ed4/Documents/phd/chemo_project/BotSeq/WP4/KCL_organoid_work/wp4_2530_20230127/data/DBS_spectra/DBS78_",samples[k],"_spectrum.pdf",sep = ""), height = 4, width = 10, plot = dnv_grob_plot)
+  ggsave(filename = paste("/Users/ed4/Documents/phd/chemo_project/BotSeq/panbody/panbody_20230106/data/dbs_calling/DBS_spectra/DBS78_",samples[k],"_spectrum.pdf",sep = ""), height = 4, width = 10, plot = dnv_grob_plot)
   
 }
 ```
@@ -200,6 +200,5 @@ for(k in 1:length(samples)) {
 Write out matrix
 
 ```{r output matrix}
-write.table(dbs_matrix, "/Users/ed4/Documents/phd/chemo_project/BotSeq/WP4/KCL_organoid_work/wp4_2530_20230127/data/dbs_mutation_matrix.tsv", sep = "\t")
-
+write.table(dbs_matrix, "/Users/ed4/Documents/phd/chemo_project/BotSeq/panbody/panbody_20230106/data/dbs_mutation_matrix.tsv", sep = "\t", row.names = FALSE)
 ```

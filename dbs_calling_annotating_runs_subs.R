@@ -5,17 +5,20 @@
 # sampleID, chr = chromosome, pos = mutated site, ref = reference base, mut = mutant base.
 
 
-# NB. For users at the Wellcome Sanger Institute, the script (dbs_for_nanoseq_input_generator.sh) can be used to pull mutation files from the compute farm, filter them, and format them correctly to be used in this script.
+# NB. For users at the Wellcome Sanger Institute, the script dbs_for_nanoseq_input_generator.sh can be used to gather the correct mutation files for this script, if you are using 'nanoflow' (not on github yet) to process your NanoSeq output data
 
 library(tidyverse)
-library(vcfR)
 
-#list file names in the area
-files <- list.files(path = "/Users/ed4/Documents/temp/dbs_call_test/", pattern = "*.tsv$")
+#input working directory
+work.dir <- "/Users/ed4/Documents/phd/chemo_project/BotSeq/panbody/panbody_20230106/data/dbs_calling/"
+
+
+#list file names for the input data tables
+files <- list.files(path = paste0(work.dir, "sbs_tables/"), pattern = "*.tsv$")
 
 #read in as tables
 for (file in files) {
-  temp <- read.table(paste0("/Users/ed4/Documents/temp/dbs_call_test/", file), sep="\t", header = TRUE)
+  temp <- read.table(paste0(work.dir, "sbs_tables/", file), sep="\t", header = TRUE)
   assign(file, temp)
 }
 
@@ -66,7 +69,7 @@ annotruns = function(mutations) {
 }
 
 # run DBS calling
-collapsed_table <- annotruns(mut_table) #this now shows the dbs separately
+collapsed_table <- annotruns(mut_table) #this now shows the dbs (and other mnvs) as separate instances to the sbs
 
 #filter for just the dbs
 dbs_table <- filter(collapsed_table, nchar(ref) == 2)
@@ -75,13 +78,13 @@ dbs_table <- filter(collapsed_table, nchar(ref) == 2)
 mnv_table <- filter(collapsed_table, nchar(ref) > 2)
 
 #write out
-write_csv(dbs_table, "/Users/ed4/Documents/temp/dbs_call_test/dbs_calls.csv")
-write_csv(mnv_table, "/Users/ed4/Documents/temp/dbs_call_test/mnv_calls.csv")
+write_csv(dbs_table, paste0(work.dir, "dbs_calls.csv"))
+write_csv(mnv_table, paste0(work.dir, "mnv_calls.csv"))
 
-#make input for SigProfilerMatrixGenerator
+#make input for SigProfilerMatrixGenerator - uses 'text' format, which is accepted by this algorithm. This is not required for downstream use of 'dnv_caller.Rmd', which can also be used to generate a matrix in the appropriate format.
 dbs_table_txt <- dbs_table %>% mutate(Project="Dinucs") %>% mutate(ID=".") %>% mutate(Genome="GRCh37") %>% mutate(mut_type="DNP") %>% mutate(pos_end=pos+1) %>% mutate(Type="SOMATIC")
 colnames(dbs_table_txt) <- c("Sample", "chrom", "pos_start", "ref", "alt", "Project", "ID", "Genome", "mut_type", "pos_end", "Type")
 dbs_table_txt_final <- dbs_table_txt[,c(6,1,7,8,9,2,3,10,4,5,11)]
 
 #output
-write_tsv(dbs_table_txt_final, "/Users/ed4/Documents/temp/dbs_call_test/dbs_calls_text.txt")
+write_tsv(dbs_table_txt_final, paste0(work.dir, "dbs_calls_text.txt"))

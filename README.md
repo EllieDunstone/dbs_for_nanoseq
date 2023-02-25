@@ -4,7 +4,7 @@ NB// WIP - no promises anything here works right now.
 
 ## Introduction
 
-This repo contains scripts for the analysis of doublet base substitutions (DBS) using data generated using the NanoSeq pipeline at the Wellcome Sanger Institute. 
+This repo contains scripts for the analysis of doublet base substitutions (DBS) using data generated using the NanoSeq pipeline at the Wellcome Sanger Institute. The scripts can be used to call DBS and other multi-nucleotide variants from the SBS calls output by the pipeline, generate mutation matrices for signature analysis, plot mutational spectra, and correct the raw mutation counts according to the dinucleotide coverage per sample.
 
 ## Scripts
 
@@ -12,7 +12,7 @@ The script "dbs_calling_annotating_runs_subs.R" annotates dinucleotides and runs
 
 The script "dnv_caller.Rmd" generates a DBS78 matrix (see <https://cancer.sanger.ac.uk/signatures/dbs/>) for signature analysis from a table of DNVs. This is based on a script written by Andrew Lawson. You can generate the table of DNVs using the script "dbs_calling_annotating_runs_subs.R".
 
-The script "dbs_for_nanoseq_input_generator.sh" can be used by users of the NanoSeq pipeline at the Wellcome Sanger Institute to pull mutation files from the compute farm, filter them, and format them correctly to be used in the other scripts described above. 
+The script "dbs_for_nanoseq_input_generator.sh" can be used by users of the NanoSeq pipeline at the Wellcome Sanger Institute to gather the mutation files needed from the compute farm. This script assumes prior use of the nanoflow workflow to process the output data (not yet on github, will update).
 
 Example input data is provided in the directory 'example_data'.
 
@@ -24,7 +24,6 @@ The scripts load the following R libraries, which will need to be installed prio
 * tidyverse
 * grid
 * gtable
-* vcfR
 
 ## Usage
 

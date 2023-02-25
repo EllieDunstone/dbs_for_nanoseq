@@ -30,7 +30,41 @@ work.dir <- "/Users/ed4/Documents/phd/chemo_project/BotSeq/panbody/panbody_20230
 dbs_matrix <- read.table(paste0(work.dir,"data/dbs_mutation_matrix.tsv"))
 ```
 
-We also need the observed trinucleotide frequencies for our data, as calculated by the NanoSeq pipeline. 
+We also need to read in and format the observed trinucleotide frequencies for our data, as calculated by the NanoSeq pipeline (ratio2genome files).
+
+```{r read in ratio2genome files}
+#list file names
+files <- list.files(path = paste0(work.dir, "data/dbs_calling/ratio2genome/"), pattern = "*.tsv$")
+
+#read in as tables
+for (file in files) {
+  temp <- read.table(paste0(work.dir, "data/dbs_calling/ratio2genome/", file), sep="\t", header = TRUE)
+  temp <- cbind(trinuc = rownames(temp), data.frame(temp, row.names=NULL))
+  assign(file, temp)
+}
+
+#add sample ID as column
+tables <- c()
+
+for (file in files) {
+  new <- mutate(get(file), sampleID = paste0(strsplit(file, "_")[[1]][1], "_", strsplit(file, "_")[[1]][2]))
+  assign(paste0("sampleID_", file), new)
+  tables <- cbind(tables, paste0("sampleID_", file))
+}
+
+#concatenate tables
+ratio2genome_table <- data.frame(matrix(ncol=ncol(new))) #init table
+colnames(ratio2genome_table) <- colnames(new)
+
+for (table in tables) {
+  ratio2genome_table <- rbind(ratio2genome_table, get(table))
+  print(table)
+}
+
+ratio2genome_table <- ratio2genome_table[-1,] #drop blank first row
+```
+
+
 
 Notes:
 per sample file with the trinuc frequency in sample, and in genome

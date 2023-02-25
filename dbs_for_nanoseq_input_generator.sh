@@ -17,6 +17,16 @@ echo "Copying SBS mutation files"
 cp ../summary_PD*/*muts.tsv ./
 echo "SBS mutation files copied!"
 
+# Make directory for ratio2genome files needed for dinuc frequency correction
+cd ..
+mkdir ratio2genome
+cd ratio2genome
+
+# Copy ratio2genome files to new dir
+echo "Copying ratio2genome files"
+cp ../summary_PD*/*.trint_counts_and_ratio2genome.tsv ./
+echo "ratio2genome files copied!"
+
 # I think we actually just need the above and then to output this directory to use in the R script?
 
 # # Load farm version of bcftools

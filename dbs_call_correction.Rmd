@@ -53,24 +53,45 @@ for (file in files) {
 }
 
 #concatenate tables
-ratio2genome_table <- data.frame(matrix(ncol=ncol(new))) #init table
-colnames(ratio2genome_table) <- colnames(new)
+trinuc_ratio2genome_table <- data.frame(matrix(ncol=ncol(new))) #init table
+colnames(trinuc_ratio2genome_table) <- colnames(new)
 
 for (table in tables) {
-  ratio2genome_table <- rbind(ratio2genome_table, get(table))
+  trinuc_ratio2genome_table <- rbind(trinuc_ratio2genome_table, get(table))
   print(table)
 }
 
-ratio2genome_table <- ratio2genome_table[-1,] #drop blank first row
+trinuc_ratio2genome_table <- trinuc_ratio2genome_table[-1,] #drop blank first row
+```
+
+Finally, we need the frequencies of trinucleotides present in the human genome. This can be obtained from the package 'deconstructSigs'.
+
+```{r read in genome dinuc freqs}
+genome_trinuc_freqs <- deconstructSigs::tri.counts.genome
+genome_trinuc_freqs <- cbind(rownames(genome_trinuc_freqs), data.frame(genome_trinuc_freqs, row.names=NULL))
+colnames(genome_trinuc_freqs) <- c("trinuc", "freq")
 ```
 
 
+## Calculate dinucleotide frequencies
 
-Notes:
-per sample file with the trinuc frequency in sample, and in genome
-for each trinuc, keep only first two bases - sum over the entries for the third base
-gives count for the trinucs - this is the observed
-calculate freq for both
-correct by normalising according to it
-am looking for the trinuc ratio2genome file
-can get actual counts in genome using deconstructsigs::trinuc_counts or soemthing? 
+Now we have the data for our observed trinucleotide frequencies and those in the human genome, we can use this to calculate the dinucleotide frequencies. We can do this by summing the counts of trinucleotides, ignoring the 'third' base. For example, we can sum the counts for CTA, CTC, CTT and CTG to give the count for CT.
+
+```{r calculate observed dinuc freq}
+dinuc_ratio2genome_table <- trinuc_ratio2genome_table %>% select(trinuc, tri_bg, sampleID) %>% mutate(dinuc = substr(trinuc, 1, 2)) %>% group_by(sampleID, dinuc) %>% summarise(dinuc_count = sum(tri_bg)) 
+```
+
+```{r calculate genome dinuc freq}
+genome_dinuc_freqs <- genome_trinuc_freqs %>% mutate(dinuc = substr(trinuc, 1, 2)) %>% group_by(dinuc) %>% summarise(genome_dinuc_count = sum(freq))
+```
+
+Using these data, we can now calculate the ratio between the observed dinucleotide proportions in our data and the proportions in the human genome.
+
+```{r calculate dinuc ratio2genome}
+dinuc_ratio2genome_table <- dinuc_ratio2genome_table %>% left_join(genome_dinuc_freqs) %>% mutate(obs_prop = dinuc_count/sum(dinuc_count)) %>% mutate(exp_prop = genome_dinuc_count/sum(genome_dinuc_count)) %>% mutate(dinuc_ratio2genome = obs_prop/exp_prop)
+```
+
+Need to now work out what to do next - how is this used to generate the 'burdens' file?
+
+
+

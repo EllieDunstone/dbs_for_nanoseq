@@ -102,7 +102,21 @@ We can use these values to generate estimated dinucleotide burdens and corrected
 To generate a corrected dbs matrix, we multiply the rows of our existing matrix by the ratios calculated above.
 
 ```{r correct dbs matrix}
-dbs_matrix_corrected <- dbs_matrix %>% mutate(dinuc = ) %>% left_join()
+#make matrix of correction factors for your data
+
+#init matrix
+correction_factors <- matrix(nrow = nrow(dbs_matrix), ncol = ncol(dbs_matrix))
+correction_factors[,1] <- substr(dbs_matrix$MutationType, 1, 2)
+colnames(correction_factors) <- c("dinuc", colnames(dbs_matrix)[-1])
+
+#add corresponding correction factors for each sample and dinuc context
+for (i in 2:ncol(dbs_matrix)) {
+  for (j in 1:nrow(dbs_matrix)) {
+    print(dinuc_ratio2genome_table[which(dinuc_ratio2genome_table$sampleID==colnames(dbs_matrix)[i] & dinuc_ratio2genome_table$dinuc==rownames(dbs_matrix)[j]), 7])
+  }
+}
+
+#dbs_matrix_corrected <- dbs_matrix %>% mutate(dinuc = substr(MutationType, 1, 2)) %>% left_join(select(genome_dinuc_freqs, dinuc
 ```
 
 

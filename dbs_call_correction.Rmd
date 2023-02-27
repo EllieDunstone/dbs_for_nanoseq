@@ -27,7 +27,7 @@ work.dir <- "/Users/ed4/Documents/phd/chemo_project/BotSeq/panbody/panbody_20230
 ```
 
 ```{r read in dbs matrix}
-dbs_matrix <- read.table(paste0(work.dir,"data/dbs_mutation_matrix.tsv"))
+dbs_matrix <- read.table(paste0(work.dir,"data/dbs_mutation_matrix.tsv"), header = TRUE)
 ```
 
 We also need to read in and format the observed trinucleotide frequencies for our data, as calculated by the NanoSeq pipeline (ratio2genome files).
@@ -85,13 +85,37 @@ dinuc_ratio2genome_table <- trinuc_ratio2genome_table %>% select(trinuc, tri_bg,
 genome_dinuc_freqs <- genome_trinuc_freqs %>% mutate(dinuc = substr(trinuc, 1, 2)) %>% group_by(dinuc) %>% summarise(genome_dinuc_count = sum(freq))
 ```
 
+
+## Calculate ratio between observed dinucleotide frequencies and genome frequencies
+
 Using these data, we can now calculate the ratio between the observed dinucleotide proportions in our data and the proportions in the human genome.
 
 ```{r calculate dinuc ratio2genome}
 dinuc_ratio2genome_table <- dinuc_ratio2genome_table %>% left_join(genome_dinuc_freqs) %>% mutate(obs_prop = dinuc_count/sum(dinuc_count)) %>% mutate(exp_prop = genome_dinuc_count/sum(genome_dinuc_count)) %>% mutate(dinuc_ratio2genome = obs_prop/exp_prop)
 ```
 
-Need to now work out what to do next - how is this used to generate the 'burdens' file?
+
+## Calculate dinucleotide burdens and corrected dinucleotide mutation counts
+
+We can use these values to generate estimated dinucleotide burdens and corrected dinucleotide mutation counts, as done by the NanoSeq pipeline for single base substitutions. 
+
+To generate a corrected dbs matrix, we multiply the rows of our existing matrix by the ratios calculated above.
+
+```{r correct dbs matrix}
+dbs_matrix_corrected <- dbs_matrix %>% mutate(dinuc = ) %>% left_join()
+```
 
 
+Need to now work out what to do next - how is this used to generate the 'burdens' and 'trint_onto_genome' files for the SBS?
+
+Creating the 'mut_burden.tsv' file - for each sample, has columns 'muts, total, burden, burden_lci, burden_uci' and then rows 'observed, corrected' - we essentially only need the 'corrected' row for downstream analysis.
+
+Pretty sure the observed and corrected total are the same, so it's just the muts that need correcting? 
+
+
+results.trint_subs_obs_corrected.tsv file contains the trinucleotide mutation type, the trint_subst_obs (observed number of this kind of mutation), and 'trint_onto_genome'. Presumably regardless of the mut type, you use the ratio for the frequency of the ref? 
+
+Do you then use the sum of trint_onto_genome per sample to calculate the corrected genome burden for the burdens file as above?
+
+I'm a bit confused about how this ties into correcting for the duplex coverage per sample?
 

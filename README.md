@@ -27,6 +27,7 @@ The scripts load the following R libraries, which will need to be installed prio
 * grid
 * gtable
 * deconstructSigs
+* spgs
 
 ## Usage
 

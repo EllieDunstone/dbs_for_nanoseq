@@ -12,6 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r load packages, include=FALSE}
 library(tidyverse)
 library(deconstructSigs)
+library(spgs)
 ```
 
 ## Introduction
@@ -78,6 +79,7 @@ colnames(genome_trinuc_freqs) <- c("trinuc", "freq")
 Now we have the data for our observed trinucleotide frequencies and those in the human genome, we can use this to calculate the dinucleotide frequencies. We can do this by summing the counts of trinucleotides, ignoring the 'third' base. For example, we can sum the counts for CTA, CTC, CTT and CTG to give the count for CT.
 
 ```{r calculate observed dinuc freq}
+#calculate for dinucs given
 dinuc_ratio2genome_table <- trinuc_ratio2genome_table %>% select(trinuc, tri_bg, sampleID) %>% mutate(dinuc = substr(trinuc, 1, 2)) %>% group_by(sampleID, dinuc) %>% summarise(dinuc_count = sum(tri_bg)) 
 ```
 
@@ -101,20 +103,33 @@ We can use these values to generate estimated dinucleotide burdens and corrected
 
 To generate a corrected dbs matrix, we multiply the rows of our existing matrix by the ratios calculated above.
 
+We also need to consider here that the frequencies (and therefore correction factors) for nucleotides that are the reverse complements of each other are the same.
+
 ```{r correct dbs matrix}
 #make matrix of correction factors for your data
 
-#init matrix
-correction_factors <- matrix(nrow = nrow(dbs_matrix), ncol = ncol(dbs_matrix))
+#init df
+correction_factors <- as.data.frame(matrix(nrow = nrow(dbs_matrix), ncol = ncol(dbs_matrix)))
 correction_factors[,1] <- substr(dbs_matrix$MutationType, 1, 2)
 colnames(correction_factors) <- c("dinuc", colnames(dbs_matrix)[-1])
 
+#make reverse complement table
+rev_comp <- as.data.frame(cbind(dinuc = unique(dinuc_ratio2genome_table$dinuc), dinuc_rc = spgs::reverseComplement(unique(dinuc_ratio2genome_table$dinuc), case = "as is")))
+
 #add corresponding correction factors for each sample and dinuc context
-for (i in 2:ncol(dbs_matrix)) {
-  for (j in 1:nrow(dbs_matrix)) {
-    print(dinuc_ratio2genome_table[which(dinuc_ratio2genome_table$sampleID==colnames(dbs_matrix)[i] & dinuc_ratio2genome_table$dinuc==rownames(dbs_matrix)[j]), 7])
+for (i in 2:ncol(correction_factors)) {
+  for (j in 1:nrow(correction_factors)) {
+    if (correction_factors$dinuc[j] %in% rev_comp$dinuc) {
+      correction_factors[j, i] <- dinuc_ratio2genome_table$dinuc_ratio2genome[which(dinuc_ratio2genome_table$dinuc == correction_factors$dinuc[j] & dinuc_ratio2genome_table$sampleID == colnames(correction_factors)[i])]
+    } else {
+      rc <- rev_comp$dinuc[which(rev_comp$dinuc_rc == correction_factors$dinuc[j])]
+      correction_factors[j, i] <- dinuc_ratio2genome_table$dinuc_ratio2genome[which(dinuc_ratio2genome_table$dinuc == rc & dinuc_ratio2genome_table$sampleID == colnames(correction_factors)[i])]
+    }
   }
 }
+
+
+# some of the dinucleotides still aren't in here and i'm confused and upset. If you are reading this on my github then please stop, don't look at me :( 
 
 #dbs_matrix_corrected <- dbs_matrix %>% mutate(dinuc = substr(MutationType, 1, 2)) %>% left_join(select(genome_dinuc_freqs, dinuc
 ```

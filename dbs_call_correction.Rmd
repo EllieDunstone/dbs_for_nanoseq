@@ -116,7 +116,6 @@ colnames(correction_factors) <- c("dinuc", colnames(dbs_matrix)[-1])
 ##make reverse complement table
 rev_comp <- as.data.frame(cbind(dinuc = unique(dinuc_ratio2genome_table$dinuc), dinuc_rc = spgs::reverseComplement(unique(dinuc_ratio2genome_table$dinuc), case = "as is")))
 
-
 ##add corresponding correction factors for each sample and dinuc context
 
 #for each cell of the table
@@ -136,7 +135,7 @@ for (i in 2:ncol(correction_factors)) {
 }
 
 
-# some of the dinucleotides still aren't in here and i'm confused and upset. If you are reading this on my github then please stop, don't look at me :( 
+# some of the dinucleotides still aren't in here and i'm confused :( 
 
 #correct dbs matrix by multiplying by correction factors
 dbs_matrix_corrected <- cbind(dbs_matrix[,1], dbs_matrix[,-1]*correction_factors)
@@ -150,10 +149,9 @@ Creating the 'mut_burden.tsv' file - for each sample, has columns 'muts, total, 
 
 Pretty sure the observed and corrected total are the same, so it's just the muts that need correcting? 
 
-
 results.trint_subs_obs_corrected.tsv file contains the trinucleotide mutation type, the trint_subst_obs (observed number of this kind of mutation), and 'trint_onto_genome'. Presumably regardless of the mut type, you use the ratio for the frequency of the ref? 
 
 Do you then use the sum of trint_onto_genome per sample to calculate the corrected genome burden for the burdens file as above?
 
-I'm a bit confused about how this ties into correcting for the duplex coverage per sample? Need to think about it more.
+I'm a bit confused about how this ties into correcting for the duplex coverage per sample? Need to think about it more. Think that that isn't relevant here...?
 

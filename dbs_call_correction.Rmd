@@ -76,15 +76,37 @@ colnames(genome_trinuc_freqs) <- c("trinuc", "freq")
 
 ## Calculate dinucleotide frequencies
 
-Now we have the data for our observed trinucleotide frequencies and those in the human genome, we can use this to calculate the dinucleotide frequencies. We can do this by summing the counts of trinucleotides, ignoring the 'third' base. For example, we can sum the counts for CTA, CTC, CTT and CTG to give the count for CT.
+Now we have the data for our observed trinucleotide frequencies and those in the human genome, we can use this to calculate the dinucleotide frequencies. We can do this by summing the counts of trinucleotides, ignoring the 'third' base. For example, we can sum the counts for CTA, CTC, CTT and CTG to give the count for CT. Due to the way that the trinucleotides have been 'collapsed' to avoid redundancy of reverse complements, we also need to do this process ignoring the 'first' base, and then divide by two to get the counts (since we are effectively counting each dinucleotide twice).
+
+NB. This logic needs checking, but I think it holds up?
 
 ```{r calculate observed dinuc freq}
-#calculate for dinucs given
-dinuc_ratio2genome_table <- trinuc_ratio2genome_table %>% select(trinuc, tri_bg, sampleID) %>% mutate(dinuc = substr(trinuc, 1, 2)) %>% group_by(sampleID, dinuc) %>% summarise(dinuc_count = sum(tri_bg)) 
+#calculate for dinucs given - collapse third base
+dinuc_ratio2genome_table_A <- trinuc_ratio2genome_table %>% select(trinuc, tri_bg, sampleID) %>% mutate(dinuc = substr(trinuc, 1, 2)) %>% group_by(sampleID, dinuc) %>% summarise(dinuc_count_A = sum(tri_bg)) 
+
+#calculate for dinucs given - collapse first base
+dinuc_ratio2genome_table_B <- trinuc_ratio2genome_table %>% select(trinuc, tri_bg, sampleID) %>% mutate(dinuc = substr(trinuc, 2, 3)) %>% group_by(sampleID, dinuc) %>% summarise(dinuc_count_B = sum(tri_bg)) 
+
+#join tables
+dinuc_ratio2genome_table <- full_join(dinuc_ratio2genome_table_A, dinuc_ratio2genome_table_B)
+dinuc_ratio2genome_table <- dinuc_ratio2genome_table[order(dinuc_ratio2genome_table$sampleID),]
+
+#sum counts and divide by 2
+dinuc_ratio2genome_table <- dinuc_ratio2genome_table %>% replace(is.na(.), 0) %>% mutate(dinuc_count = (as.numeric(dinuc_count_A) + as.numeric(dinuc_count_B))/2) %>% select(sampleID, dinuc, dinuc_count)
 ```
 
 ```{r calculate genome dinuc freq}
-genome_dinuc_freqs <- genome_trinuc_freqs %>% mutate(dinuc = substr(trinuc, 1, 2)) %>% group_by(dinuc) %>% summarise(genome_dinuc_count = sum(freq))
+#collapse third base
+genome_dinuc_freqs_A <- genome_trinuc_freqs %>% mutate(dinuc = substr(trinuc, 1, 2)) %>% group_by(dinuc) %>% summarise(genome_dinuc_count_A = sum(freq))
+
+#collapse first base
+genome_dinuc_freqs_B <- genome_trinuc_freqs %>% mutate(dinuc = substr(trinuc, 2, 3)) %>% group_by(dinuc) %>% summarise(genome_dinuc_count_B = sum(freq))
+
+#join tables
+genome_dinuc_freqs <- full_join(genome_dinuc_freqs_A, genome_dinuc_freqs_B)
+
+#sum counts and divide by 2
+genome_dinuc_freqs <- genome_dinuc_freqs %>% replace(is.na(.), 0) %>% mutate(genome_dinuc_count = (as.numeric(genome_dinuc_count_A) + as.numeric(genome_dinuc_count_B))/2) %>% select(dinuc, genome_dinuc_count)
 ```
 
 
@@ -134,16 +156,26 @@ for (i in 2:ncol(correction_factors)) {
   }
 }
 
-
-# some of the dinucleotides still aren't in here and i'm confused :( 
-
 #correct dbs matrix by multiplying by correction factors
-dbs_matrix_corrected <- cbind(dbs_matrix[,1], dbs_matrix[,-1]*correction_factors)
+dbs_matrix_corrected <- cbind(dbs_matrix[,1], dbs_matrix[,-1]*correction_factors[,-1])
 colnames(dbs_matrix_corrected) <- colnames(dbs_matrix)
 ```
 
+We can now output the corrected matrix, as the raw corrected matrix and as the rounded counts (as integer values are required e.g. for signature extraction).
 
-Need to now work out what to do next - how is this used to generate the 'burdens' and 'trint_onto_genome' files for the SBS?
+```{r output corrected matrix}
+#raw matrix
+write.table(dbs_matrix_corrected, paste0(work.dir, "data/dbs_mutation_matrix_onto_genome_raw.tsv"), sep = "\t", row.names = FALSE)
+
+#rounded integer matrix
+dbs_matrix_corrected_rounded <- cbind(dbs_matrix_corrected[,1], round(dbs_matrix_corrected[,-1]))
+colnames(dbs_matrix_corrected_rounded)[1] <- colnames(dbs_matrix_corrected)[1]
+write.table(dbs_matrix_corrected_rounded, paste0(work.dir, "data/dbs_mutation_matrix_onto_genome_rounded.tsv"), sep = "\t", row.names = FALSE)
+```
+
+
+
+Need to now work out what to do next - how is this used to generate the 'burdens' file for the SBS?
 
 Creating the 'mut_burden.tsv' file - for each sample, has columns 'muts, total, burden, burden_lci, burden_uci' and then rows 'observed, corrected' - we essentially only need the 'corrected' row for downstream analysis.
 
@@ -152,6 +184,4 @@ Pretty sure the observed and corrected total are the same, so it's just the muts
 results.trint_subs_obs_corrected.tsv file contains the trinucleotide mutation type, the trint_subst_obs (observed number of this kind of mutation), and 'trint_onto_genome'. Presumably regardless of the mut type, you use the ratio for the frequency of the ref? 
 
 Do you then use the sum of trint_onto_genome per sample to calculate the corrected genome burden for the burdens file as above?
-
-I'm a bit confused about how this ties into correcting for the duplex coverage per sample? Need to think about it more. Think that that isn't relevant here...?
 
